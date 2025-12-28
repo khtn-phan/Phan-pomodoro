@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pomodoro Timer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+            background-color: #121212;
+            color: #ffffff;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .title {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            color: #f0f0f0;
+        }
+
+        .timer {
+            font-size: 6rem;
+            font-weight: 700;
+            margin-bottom: 2rem;
+            font-variant-numeric: tabular-nums;
+            color: #ffffff;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            font-size: 1rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 100px;
+        }
+
+        .btn-start {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .btn-start:hover {
+            background-color: #45a049;
+            transform: translateY(-2px);
+        }
+
+        .btn-pause {
+            background-color: #ff9800;
+            color: white;
+        }
+
+        .btn-pause:hover {
+            background-color: #e68900;
+            transform: translateY(-2px);
+        }
+
+        .btn-reset {
+            background-color: #f44336;
+            color: white;
+        }
+
+        .btn-reset:hover {
+            background-color: #d32f2f;
+            transform: translateY(-2px);
+        }
+
+        .btn-settings {
+            background-color: #2196F3;
+            color: white;
+        }
+
+        .btn-settings:hover {
+            background-color: #0b7dda;
+            transform: translateY(-2px);
+        }
+
+        .settings-panel {
+            background-color: #1e1e1e;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-top: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            display: none;
+        }
+
+        .settings-panel.active {
+            display: block;
+        }
+
+        .settings-title {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: #f0f0f0;
+        }
+
+        .setting-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .setting-label {
+            font-size: 1rem;
+            color: #cccccc;
+        }
+
+        .setting-input {
+            width: 100px;
+            padding: 0.5rem;
+            border-radius: 6px;
+            border: 1px solid #333;
+            background-color: #2a2a2a;
+            color: white;
+            text-align: center;
+            font-size: 1rem;
+        }
+
+        .btn-save {
+            background-color: #4CAF50;
+            color: white;
+            width: 100%;
+            margin-top: 1rem;
+        }
+
+        .btn-save:hover {
+            background-color: #45a049;
+        }
+
+        .phase-indicator {
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+            color: #cccccc;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        @media (max-width: 600px) {
+            .title {
+                font-size: 2.5rem;
+            }
+            
+            .timer {
+                font-size: 4rem;
+            }
+            
+            .controls {
+                flex-wrap: wrap;
+            }
+            
+            .btn {
+                min-width: 80px;
+                padding: 0.6rem 1.2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="title">🍅 Pomodoro Timer</h1>
+        
+        <div class="phase-indicator" id="phaseIndicator">Focus Time</div>
+        
+        <div class="timer" id="timer">25:00</div>
+        
+        <div class="controls">
+            <button class="btn btn-start" id="startBtn">Start</button>
+            <button class="btn btn-pause" id="pauseBtn" disabled>Pause</button>
+            <button class="btn btn-reset" id="resetBtn">Reset</button>
+            <button class="btn btn-settings" id="settingsBtn">Settings</button>
+        </div>
+        
+        <div class="settings-panel" id="settingsPanel">
+            <h2 class="settings-title">Settings</h2>
+            
+            <div class="setting-item">
+                <label class="setting-label" for="focusTime">Focus Time (minutes):</label>
+                <input type="number" id="focusTime" class="setting-input" min="1" max="60" value="25">
+            </div>
+            
+            <div class="setting-item">
+                <label class="setting-label" for="shortBreak">Short Break (minutes):</label>
+                <input type="number" id="shortBreak" class="setting-input" min="1" max="30" value="5">
+            </div>
+            
+            <div class="setting-item">
+                <label class="setting-label" for="longBreak">Long Break (minutes):</label>
+                <input type="number" id="longBreak" class="setting-input" min="1" max="60" value="15">
+            </div>
+            
+            <button class="btn btn-save" id="saveBtn">Save Settings</button>
+        </div>
+    </div>
+
+    <script>
+        // State variables
+        let timeLeft = 25 * 60; // 25 minutes in seconds
+        let isRunning = false;
+        let timerInterval = null;
+        let isFocusTime = true;
+        let cycleCount = 0;
+        
+        // Settings
+        let settings = {
+            focusTime: 25,
+            shortBreak: 5,
+            longBreak: 15
+        };
+        
+        // DOM Elements
+        const timerElement = document.getElementById('timer');
+        const phaseIndicator = document.getElementById('phaseIndicator');
+        const startBtn = document.getElementById('startBtn');
+        const pauseBtn = document.getElementById('pauseBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const settingsBtn = document.getElementById('settingsBtn');
+        const settingsPanel = document.getElementById('settingsPanel');
+        const focusTimeInput = document.getElementById('focusTime');
+        const shortBreakInput = document.getElementById('shortBreak');
+        const longBreakInput = document.getElementById('longBreak');
+        const saveBtn = document.getElementById('saveBtn');
+        
+        // Initialize timer display
+        updateTimerDisplay();
+        
+        // Format time as MM:SS
+        function formatTime(seconds) {
+            const minutes = Math.floor(seconds / 60);
+            const remainingSeconds = seconds % 60;
+            return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+        }
+        
+        // Update timer display
+        function updateTimerDisplay() {
+            timerElement.textContent = formatTime(timeLeft);
+        }
+        
+        // Update phase indicator
+        function updatePhaseIndicator() {
+            phaseIndicator.textContent = isFocusTime ? 'Focus Time' : 
+                (cycleCount % 4 === 0 && cycleCount > 0 ? 'Long Break' : 'Short Break');
+        }
+        
+        // Start the timer
+        function startTimer() {
+            if (isRunning) return;
+            
+            isRunning = true;
+            startBtn.disabled = true;
+            pauseBtn.disabled = false;
+            
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                updateTimerDisplay();
+                
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    isRunning = false;
+                    
+                    // Play sound notification
+                    playNotificationSound();
+                    
+                    // Switch between focus time and break
+                    if (isFocusTime) {
+                        cycleCount++;
+                        isFocusTime = false;
+                        
+                        // Every 4 cycles, take a long break
+                        if (cycleCount % 4 === 0) {
+                            timeLeft = settings.longBreak * 60;
+                        } else {
+                            timeLeft = settings.shortBreak * 60;
+                        }
+                    } else {
+                        isFocusTime = true;
+                        timeLeft = settings.focusTime * 60;
+                    }
+                    
+                    updatePhaseIndicator();
+                    updateTimerDisplay();
+                    
+                    // Show notification
+                    showPhaseChangeNotification();
+                    
+                    // Auto-start next session if desired
+                    // Uncomment the line below to auto-start next session
+                    // startTimer();
+                }
+            }, 1000);
+        }
+        
+        // Pause the timer
+        function pauseTimer() {
+            if (!isRunning) return;
+            
+            clearInterval(timerInterval);
+            isRunning = false;
+            startBtn.disabled = false;
+            pauseBtn.disabled = true;
+        }
+        
+        // Reset the timer
+        function resetTimer() {
+            clearInterval(timerInterval);
+            isRunning = false;
+            isFocusTime = true;
+            cycleCount = 0;
+            timeLeft = settings.focusTime * 60;
+            
+            updateTimerDisplay();
+            updatePhaseIndicator();
+            
+            startBtn.disabled = false;
+            pauseBtn.disabled = true;
+        }
+        
+        // Play notification sound
+        function playNotificationSound() {
+            try {
+                // Create a simple beep sound
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.value = 800;
+                oscillator.type = 'sine';
+                
+                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+                
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.5);
+            } catch (e) {
+                console.log("Audio notification failed:", e);
+            }
+        }
+        
+        // Show phase change notification
+        function showPhaseChangeNotification() {
+            const message = isFocusTime ? 
+                "Break is over! Time to focus!" : 
+                (cycleCount % 4 === 0 ? "Great job! Take a long break!" : "Good work! Take a short break!");
+            
+            // Check if browser supports notifications
+            if ("Notification" in window && Notification.permission === "granted") {
+                new Notification("Pomodoro Timer", {
+                    body: message,
+                    icon: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍅</text></svg>"
+                });
+            }
+            
+            // Also show alert as fallback
+            alert(message);
+        }
+        
+        // Toggle settings panel
+        function toggleSettingsPanel() {
+            settingsPanel.classList.toggle('active');
+            
+            // Load current settings into inputs
+            if (settingsPanel.classList.contains('active')) {
+                focusTimeInput.value = settings.focusTime;
+                shortBreakInput.value = settings.shortBreak;
+                longBreakInput.value = settings.longBreak;
+            }
+        }
+        
+        // Save settings
+        function saveSettings() {
+            const newFocusTime = parseInt(focusTimeInput.value);
+            const newShortBreak = parseInt(shortBreakInput.value);
+            const newLongBreak = parseInt(longBreakInput.value);
+            
+            // Validate inputs
+            if (newFocusTime < 1 || newFocusTime > 60 || 
+                newShortBreak < 1 || newShortBreak > 30 || 
+                newLongBreak < 1 || newLongBreak > 60) {
+                alert("Please enter valid values:\n- Focus Time: 1-60 minutes\n- Short Break: 1-30 minutes\n- Long Break: 1-60 minutes");
+                return;
+            }
+            
+            // Update settings
+            settings.focusTime = newFocusTime;
+            settings.shortBreak = newShortBreak;
+            settings.longBreak = newLongBreak;
+            
+            // Reset timer with new settings if in focus phase
+            if (isFocusTime) {
+                timeLeft = settings.focusTime * 60;
+                updateTimerDisplay();
+            }
+            
+            // Close settings panel
+            settingsPanel.classList.remove('active');
+            
+            alert("Settings saved!");
+        }
+        
+        // Request notification permission
+        if ("Notification" in window && Notification.permission === "default") {
+            Notification.requestPermission();
+        }
+        
+        // Event listeners
+        startBtn.addEventListener('click', startTimer);
+        pauseBtn.addEventListener('click', pauseTimer);
+        resetBtn.addEventListener('click', resetTimer);
+        settingsBtn.addEventListener('click', toggleSettingsPanel);
+        saveBtn.addEventListener('click', saveSettings);
+        
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space') {
+                e.preventDefault();
+                if (isRunning) {
+                    pauseTimer();
+                } else {
+                    startTimer();
+                }
+            } else if (e.code === 'KeyR' && e.ctrlKey) {
+                e.preventDefault();
+                resetTimer();
+            } else if (e.code === 'Escape') {
+                settingsPanel.classList.remove('active');
+            }
+        });
+    </script>
+</body>
+</html>
